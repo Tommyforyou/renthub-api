@@ -110,6 +110,27 @@
             @else
                 No action
             @endif
+
+            @if($booking->status === 'confirmed')
+
+                <form method="POST"
+                    action="{{ route('company.bookings.complete', $booking->id) }}"
+                    style="display:inline;"
+                    onsubmit="return confirm('Mark this booking as completed?');">
+                    @csrf
+
+                    <button style="
+                        background:blue;
+                        color:white;
+                        border:none;
+                        padding:8px 12px;
+                        border-radius:6px;
+                    ">
+                        Complete
+                    </button>
+                </form>
+
+            @endif
         </td>
     </tr>
 

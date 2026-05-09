@@ -28,6 +28,40 @@
 
         <p>Status: {{ $vehicle->available ? 'Available' : 'Unavailable' }}</p>
 
+        <br>
+
+        <a href="{{ route('vehicles.edit', $vehicle->id) }}"
+        style="
+                display:inline-block;
+                background:orange;
+                color:white;
+                padding:8px 12px;
+                border-radius:6px;
+                text-decoration:none;
+        ">
+            Edit
+        </a>
+
+        <form method="POST"
+            action="{{ route('vehicles.destroy', $vehicle->id) }}"
+            style="display:inline;"
+            onsubmit="return confirm('Delete vehicle?');">
+
+            @csrf
+            @method('DELETE')
+
+            <button style="
+                background:red;
+                color:white;
+                border:none;
+                padding:8px 12px;
+                border-radius:6px;
+            ">
+                Delete
+            </button>
+
+        </form>
+
     </div>
 
 @endforeach

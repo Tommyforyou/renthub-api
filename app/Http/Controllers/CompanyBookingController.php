@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\RentalCompany;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingStatusMail;
 
 class CompanyBookingController extends Controller
 {
@@ -30,6 +32,9 @@ class CompanyBookingController extends Controller
         $booking->status = 'confirmed';
         $booking->save();
 
+        Mail::to($booking->customer->email)
+            ->send(new BookingStatusMail($booking, 'Your booking has been approved.'));
+        
         return back()->with('success', 'Booking approved.');
     }
 
@@ -40,8 +45,31 @@ class CompanyBookingController extends Controller
         $booking->status = 'cancelled';
         $booking->save();
 
+        Mail::to($booking->customer->email)
+        ->send(new BookingStatusMail($booking, 'Your booking has been rejected.'));
+        
         return back()->with('success', 'Booking rejected.');
     }
+
+    public function complete(Booking $booking)
+    {
+        $this->authorizeCompanyBooking($booking);
+
+        if ($booking->status !== 'confirmed') {
+            return back()->withErrors([
+                'booking' => 'Only confirmed bookings can be completed.'
+            ]);
+        }
+
+        $booking->status = 'completed';
+        $booking->save();
+
+        Mail::to($booking->customer->email)
+        ->send(new BookingStatusMail($booking, 'Your rental has been marked as completed.'));
+
+        return back()->with('success', 'Booking marked as completed.');
+    }
+
 
     private function authorizeCompanyBooking(Booking $booking): void
     {

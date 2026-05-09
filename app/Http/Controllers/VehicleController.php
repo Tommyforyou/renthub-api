@@ -42,7 +42,69 @@ class VehicleController extends Controller
 
         return view('vehicles.index', compact('vehicles'));
     }
+    public function edit(Vehicle $vehicle)
+    {
+        $this->authorizeVehicle($vehicle);
 
+        return view('vehicles.edit', compact('vehicle'));
+    }
+
+    public function update(Request $request, Vehicle $vehicle)
+    {
+        $this->authorizeVehicle($vehicle);
+
+        $request->validate([
+            'title' => 'required',
+            'brand' => 'required',
+            'model' => 'required',
+            'price_per_day' => 'required|numeric',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+
+        $imagePath = $vehicle->image;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('vehicles', 'public');
+        }
+
+        $vehicle->update([
+            'title' => $request->title,
+            'brand' => $request->brand,
+            'model' => $request->model,
+            'year' => $request->year,
+            'transmission' => $request->transmission,
+            'fuel_type' => $request->fuel_type,
+            'seats' => $request->seats,
+            'price_per_day' => $request->price_per_day,
+            'description' => $request->description,
+            'available' => $request->has('available'),
+            'image' => $imagePath,
+        ]);
+
+        return redirect('/company/vehicles')
+            ->with('success', 'Vehicle updated.');
+    }
+
+    public function destroy(Vehicle $vehicle)
+    {
+        $this->authorizeVehicle($vehicle);
+
+        $vehicle->delete();
+
+        return back()->with('success', 'Vehicle deleted.');
+    }
+
+    private function authorizeVehicle(Vehicle $vehicle): void
+    {
+        $company = \App\Models\RentalCompany::where('user_id', auth()->id())
+            ->where('status', 'approved')
+            ->firstOrFail();
+
+        if ($vehicle->rental_company_id !== $company->id) {
+            abort(403);
+        }
+    }
     public function store(Request $request)
     {
         $request->validate([
