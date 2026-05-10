@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>RentHub</title>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         body{
             margin:0;
@@ -428,5 +428,6 @@
         }
     }
 </style>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
 </html>

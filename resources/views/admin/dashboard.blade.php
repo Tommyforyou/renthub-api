@@ -2,76 +2,142 @@
 
 @section('content')
 
-<div style="
-    max-width:1450px;
-    margin:0 auto;
-    padding:28px 20px 60px;
-">
+<div class="admin-wrapper">
 
-    {{-- HERO --}}
-    <div class="admin-hero">
+    {{-- EXECUTIVE HERO --}}
+    <section class="executive-hero">
 
-        <div class="hero-bg-circle"></div>
+        <div class="hero-glow glow-1"></div>
+        <div class="hero-glow glow-2"></div>
 
-        <div class="admin-hero-content">
+        <div class="hero-content">
 
             <div>
 
-                <div class="hero-pill">
+                <div class="hero-badge">
                     🛠 RentHub Administration
                 </div>
 
                 <h1>
-                    Platform Control Center
+                    Executive Control Center
                 </h1>
 
                 <p>
-                    Monitor users, companies, vehicles, bookings,
-                    approvals, revenue, and overall marketplace operations.
+                    Monitor marketplace operations, fleet activity,
+                    booking intelligence, company approvals,
+                    revenue performance, and overall platform health.
                 </p>
 
             </div>
 
+            <div class="hero-side">
+
+                <div class="hero-metric">
+                    <span>Total Revenue</span>
+
+                    <strong>
+                        Rs {{ number_format($totalRevenue, 0) }}
+                    </strong>
+                </div>
+
+                <div class="hero-metric">
+                    <span>Platform Commission</span>
+
+                    <strong>
+                        Rs {{ number_format($totalCommission, 0) }}
+                    </strong>
+                </div>
+
+            </div>
+
         </div>
 
-    </div>
+    </section>
 
-    {{-- KPI --}}
-    <div class="kpi-grid">
+    {{-- KPI GRID --}}
+    <section class="kpi-grid">
 
-        <div class="kpi-card">
-            <div class="kpi-icon green">💰</div>
-            <div class="kpi-label">Platform Revenue</div>
+        <div class="premium-kpi-card revenue-card">
+
+            <div class="kpi-icon">
+                💰
+            </div>
+
+            <div class="kpi-label">
+                Marketplace Revenue
+            </div>
+
             <div class="kpi-value">
                 Rs {{ number_format($totalRevenue, 0) }}
             </div>
+
+            <div class="kpi-sub">
+                Gross platform bookings
+            </div>
+
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-icon blue">🏢</div>
-            <div class="kpi-label">Rental Companies</div>
+        <div class="premium-kpi-card">
+
+            <div class="kpi-icon blue-bg">
+                🏢
+            </div>
+
+            <div class="kpi-label">
+                Rental Companies
+            </div>
+
             <div class="kpi-value">
                 {{ $totalCompanies }}
             </div>
+
+            <div class="kpi-sub">
+                {{ $approvedCompanies }} approved
+            </div>
+
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-icon orange">⏳</div>
-            <div class="kpi-label">Pending Approvals</div>
+        <div class="premium-kpi-card warning-card">
+
+            <div class="kpi-icon orange-bg">
+                ⏳
+            </div>
+
+            <div class="kpi-label">
+                Pending Approvals
+            </div>
+
             <div class="kpi-value">
                 {{ $pendingCompanies }}
             </div>
+
+            <div class="kpi-sub">
+                Awaiting admin review
+            </div>
+
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-icon purple">🚘</div>
-            <div class="kpi-label">Fleet Vehicles</div>
+        <div class="premium-kpi-card">
+
+            <div class="kpi-icon purple-bg">
+                🚘
+            </div>
+
+            <div class="kpi-label">
+                Fleet Vehicles
+            </div>
+
             <div class="kpi-value">
                 {{ $totalVehicles }}
             </div>
+
+            <div class="kpi-sub">
+                {{ $availableVehicles }} available
+            </div>
+
         </div>
 
-    </div>
+    </section>
 
     {{-- MAIN GRID --}}
     <div class="admin-grid">
@@ -79,16 +145,27 @@
         {{-- LEFT --}}
         <div>
 
-            {{-- BOOKING PIPELINE --}}
-            <div class="premium-card">
+            {{-- BOOKING OPERATIONS --}}
+            <div class="glass-card">
 
-                <div class="section-title">
-                    Booking Operations
+                <div class="card-header">
+
+                    <div>
+                        <div class="card-title">
+                            Booking Operations
+                        </div>
+
+                        <div class="card-sub">
+                            Reservation activity pipeline
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="pipeline-grid">
 
-                    <div class="pipeline-card pending">
+                    <div class="pipeline-box pending-box">
+
                         <div class="pipeline-number">
                             {{ $pendingBookings }}
                         </div>
@@ -96,9 +173,11 @@
                         <div class="pipeline-label">
                             Pending
                         </div>
+
                     </div>
 
-                    <div class="pipeline-card approved">
+                    <div class="pipeline-box approved-box">
+
                         <div class="pipeline-number">
                             {{ $approvedBookings }}
                         </div>
@@ -106,9 +185,11 @@
                         <div class="pipeline-label">
                             Approved
                         </div>
+
                     </div>
 
-                    <div class="pipeline-card completed">
+                    <div class="pipeline-box completed-box">
+
                         <div class="pipeline-number">
                             {{ $completedBookings }}
                         </div>
@@ -116,6 +197,7 @@
                         <div class="pipeline-label">
                             Completed
                         </div>
+
                     </div>
 
                 </div>
@@ -123,27 +205,27 @@
             </div>
 
             {{-- RECENT BOOKINGS --}}
-            <div class="premium-card">
+            <div class="glass-card">
 
                 <div class="card-header">
 
                     <div>
-                        <div class="section-title">
-                            Recent Bookings
+                        <div class="card-title">
+                            Live Booking Feed
                         </div>
 
-                        <div class="section-sub">
+                        <div class="card-sub">
                             Latest marketplace reservations
                         </div>
                     </div>
 
                 </div>
 
-                <div class="booking-list">
+                <div class="booking-feed">
 
                     @foreach($recentBookings as $booking)
 
-                        <div class="booking-row">
+                        <div class="booking-feed-row">
 
                             <div>
 
@@ -199,10 +281,10 @@
         {{-- RIGHT --}}
         <div>
 
-            {{-- SYSTEM STATS --}}
-            <div class="premium-card">
+            {{-- SYSTEM OVERVIEW --}}
+            <div class="glass-card">
 
-                <div class="section-title">
+                <div class="card-title">
                     System Overview
                 </div>
 
@@ -214,8 +296,8 @@
                     </div>
 
                     <div class="overview-row">
-                        <span>Approved Companies</span>
-                        <strong>{{ $approvedCompanies }}</strong>
+                        <span>Total Companies</span>
+                        <strong>{{ $totalCompanies }}</strong>
                     </div>
 
                     <div class="overview-row">
@@ -240,9 +322,9 @@
             </div>
 
             {{-- RECENT COMPANIES --}}
-            <div class="premium-card">
+            <div class="glass-card">
 
-                <div class="section-title">
+                <div class="card-title">
                     Recent Companies
                 </div>
 
@@ -258,7 +340,7 @@
                                     {{ $company->company_name }}
                                 </div>
 
-                                <div class="company-sub">
+                                <div class="company-date">
                                     {{ $company->created_at->format('d M Y') }}
                                 </div>
 
@@ -292,6 +374,35 @@
 
             </div>
 
+            {{-- QUICK ACTIONS --}}
+            <div class="glass-card">
+
+                <div class="card-title">
+                    Quick Actions
+                </div>
+
+                <div class="quick-actions">
+
+                    <a href="#" class="quick-action">
+                        🏢 Review Companies
+                    </a>
+
+                    <a href="#" class="quick-action">
+                        📅 Monitor Bookings
+                    </a>
+
+                    <a href="#" class="quick-action">
+                        🚘 Fleet Oversight
+                    </a>
+
+                    <a href="#" class="quick-action">
+                        📈 Revenue Analytics
+                    </a>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
@@ -304,89 +415,149 @@ body {
     background:#f3f4f6;
 }
 
-/* HERO */
-
-.admin-hero {
-    position:relative;
-    overflow:hidden;
-    background:linear-gradient(135deg,#111827 0%,#1f2937 55%,#374151 100%);
-    border-radius:36px;
-    padding:42px;
-    margin-bottom:34px;
-    color:white;
-    box-shadow:0 20px 50px rgba(17,24,39,.18);
+.admin-wrapper {
+    max-width:1450px;
+    margin:0 auto;
+    padding:28px 20px 60px;
 }
 
-.hero-bg-circle {
+/* HERO */
+
+.executive-hero {
+    position:relative;
+    overflow:hidden;
+    background:
+        linear-gradient(135deg,#111827 0%,#1f2937 55%,#374151 100%);
+    border-radius:40px;
+    padding:48px;
+    margin-bottom:36px;
+    color:white;
+    box-shadow:0 24px 60px rgba(17,24,39,.20);
+}
+
+.hero-glow {
     position:absolute;
-    right:-60px;
-    top:-60px;
-    width:240px;
-    height:240px;
     border-radius:50%;
     background:rgba(255,255,255,.05);
 }
 
-.admin-hero-content {
-    position:relative;
-    z-index:2;
+.glow-1 {
+    width:260px;
+    height:260px;
+    top:-80px;
+    right:-80px;
 }
 
-.hero-pill {
+.glow-2 {
+    width:200px;
+    height:200px;
+    bottom:-70px;
+    right:180px;
+}
+
+.hero-content {
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:space-between;
+    gap:30px;
+    flex-wrap:wrap;
+    align-items:flex-start;
+}
+
+.hero-badge {
     display:inline-flex;
     background:rgba(255,255,255,.12);
     padding:10px 16px;
     border-radius:999px;
-    margin-bottom:18px;
+    margin-bottom:20px;
     font-size:14px;
     font-weight:700;
 }
 
-.admin-hero h1 {
-    font-size:56px;
+.executive-hero h1 {
+    font-size:62px;
     line-height:1.05;
-    margin:0 0 16px;
+    margin:0 0 18px;
     font-weight:900;
 }
 
-.admin-hero p {
+.executive-hero p {
     color:rgba(255,255,255,.82);
-    max-width:760px;
     line-height:1.9;
+    max-width:760px;
+}
+
+.hero-side {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.hero-metric {
+    background:rgba(255,255,255,.10);
+    backdrop-filter:blur(10px);
+    border-radius:24px;
+    padding:22px;
+    min-width:260px;
+}
+
+.hero-metric span {
+    display:block;
+    color:rgba(255,255,255,.72);
+    margin-bottom:8px;
+}
+
+.hero-metric strong {
+    font-size:34px;
 }
 
 /* KPI */
 
 .kpi-grid {
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
     gap:24px;
     margin-bottom:34px;
 }
 
-.kpi-card,
-.premium-card {
+.premium-kpi-card,
+.glass-card {
     background:white;
-    border-radius:30px;
+    border-radius:32px;
     padding:28px;
-    box-shadow:0 12px 32px rgba(0,0,0,.06);
+    box-shadow:0 14px 34px rgba(0,0,0,.06);
+}
+
+.revenue-card {
+    background:linear-gradient(135deg,#111827 0%,#1f2937 100%);
+    color:white;
+}
+
+.revenue-card .kpi-label,
+.revenue-card .kpi-sub {
+    color:rgba(255,255,255,.72);
+}
+
+.warning-card {
+    border:2px solid #f59e0b22;
 }
 
 .kpi-icon {
-    width:60px;
-    height:60px;
-    border-radius:18px;
+    width:64px;
+    height:64px;
+    border-radius:20px;
+    background:#dcfce7;
     display:flex;
     align-items:center;
     justify-content:center;
     font-size:30px;
-    margin-bottom:18px;
+    margin-bottom:20px;
 }
 
-.green { background:#dcfce7; }
-.blue { background:#dbeafe; }
-.orange { background:#fef3c7; }
-.purple { background:#ede9fe; }
+.blue-bg { background:#dbeafe; }
+.orange-bg { background:#fef3c7; }
+.purple-bg { background:#ede9fe; }
 
 .kpi-label {
     color:#6b7280;
@@ -395,8 +566,14 @@ body {
 }
 
 .kpi-value {
-    font-size:42px;
+    font-size:44px;
     font-weight:900;
+    margin-bottom:8px;
+}
+
+.kpi-sub {
+    color:#6b7280;
+    font-size:14px;
 }
 
 /* GRID */
@@ -408,15 +585,23 @@ body {
     align-items:start;
 }
 
-/* SECTION */
+/* CARDS */
 
-.section-title {
-    font-size:28px;
-    font-weight:900;
-    margin-bottom:8px;
+.card-header {
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    align-items:center;
+    margin-bottom:26px;
 }
 
-.section-sub {
+.card-title {
+    font-size:30px;
+    font-weight:900;
+    margin-bottom:6px;
+}
+
+.card-sub {
     color:#6b7280;
 }
 
@@ -426,29 +611,28 @@ body {
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:18px;
-    margin-top:24px;
 }
 
-.pipeline-card {
-    padding:26px;
+.pipeline-box {
     border-radius:24px;
+    padding:28px;
     text-align:center;
 }
 
-.pending {
+.pending-box {
     background:#fff7ed;
 }
 
-.approved {
+.approved-box {
     background:#eff6ff;
 }
 
-.completed {
+.completed-box {
     background:#ecfccb;
 }
 
 .pipeline-number {
-    font-size:44px;
+    font-size:46px;
     font-weight:900;
     margin-bottom:10px;
 }
@@ -457,9 +641,9 @@ body {
     color:#6b7280;
 }
 
-/* LISTS */
+/* FEEDS */
 
-.booking-list,
+.booking-feed,
 .company-list,
 .overview-list {
     display:flex;
@@ -467,7 +651,7 @@ body {
     gap:18px;
 }
 
-.booking-row,
+.booking-feed-row,
 .company-row,
 .overview-row {
     display:flex;
@@ -487,7 +671,7 @@ body {
 }
 
 .booking-sub,
-.company-sub {
+.company-date {
     color:#6b7280;
     font-size:14px;
 }
@@ -496,6 +680,23 @@ body {
     font-size:18px;
     font-weight:900;
     margin-bottom:8px;
+}
+
+/* QUICK ACTIONS */
+
+.quick-actions {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.quick-action {
+    text-decoration:none;
+    background:#f9fafb;
+    padding:18px;
+    border-radius:20px;
+    color:#111827;
+    font-weight:800;
 }
 
 /* BADGES */
@@ -541,6 +742,10 @@ body {
 
     .pipeline-grid {
         grid-template-columns:1fr;
+    }
+
+    .executive-hero h1 {
+        font-size:48px;
     }
 
 }

@@ -364,46 +364,29 @@
                                 flex-wrap:wrap;
                                 margin-bottom:22px;
                             ">
+                                @php
+                                    $statusLabel = match($booking->status) {
+                                        'pending' => 'Pending',
+                                        'approved' => 'Approved',
+                                        'confirmed' => 'Confirmed',
+                                        'rejected' => 'Rejected',
+                                        'cancelled' => 'Cancelled',
+                                        'completed' => 'Completed',
+                                        default => ucfirst($booking->status),
+                                    };
 
-                                @if($booking->status === 'approved')
+                                    $statusClass = match($booking->status) {
+                                        'pending' => 'badge-warning',
+                                        'approved', 'confirmed' => 'badge-success',
+                                        'rejected', 'cancelled' => 'badge-danger',
+                                        'completed' => 'badge-completed',
+                                        default => 'badge-warning',
+                                    };
+                                @endphp
 
-                                    <div class="badge-success">
-                                        Approved
-                                    </div>
-
-                                @elseif($booking->status === 'rejected')
-
-                                    <div class="badge-danger">
-                                        Rejected
-                                    </div>
-
-                                @elseif($booking->status === 'completed')
-
-                                    <div class="badge-completed">
-                                        Completed
-                                    </div>
-
-                                @else
-
-                                    <div class="badge-warning">
-                                        Pending
-                                    </div>
-
-                                @endif
-
-                                @if($booking->payment_status === 'paid')
-
-                                    <div class="badge-paid">
-                                        Paid
-                                    </div>
-
-                                @else
-
-                                    <div class="badge-unpaid">
-                                        Payment Pending
-                                    </div>
-
-                                @endif
+                                <div class="{{ $statusClass }}">
+                                    {{ $statusLabel }}
+                                </div>
 
                             </div>
 
@@ -429,21 +412,26 @@
                                     Download PDF
                                 </a>
 
-                                @if(in_array($booking->status, ['pending','approved','confirmed']))
+                                {{-- Cancel Booking by Customer --}}
+                                
+                                @if(
+                                        in_array($booking->status, ['pending', 'confirmed']) &&
+                                        now()->lt($booking->start_date)
+                                    )
 
-                                    <form method="POST"
-                                          action="{{ route('bookings.cancel', $booking->id) }}"
-                                          onsubmit="return confirm('Cancel this booking?')">
+                                        <form method="POST"
+                                            action="{{ route('bookings.cancel', $booking->id) }}"
+                                            onsubmit="return confirm('Are you sure you want to cancel this booking?')">
 
-                                        @csrf
+                                            @csrf
 
-                                        <button class="action-btn cancel-btn">
-                                            Cancel Booking
-                                        </button>
+                                            <button type="submit" class="action-btn cancel-btn">
+                                                Cancel Booking
+                                            </button>
 
-                                    </form>
+                                        </form>
 
-                                @endif
+                                 @endif
 
                             </div>
 

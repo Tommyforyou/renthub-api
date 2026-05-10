@@ -26,7 +26,7 @@
 
         <div>
             <h1 style="font-size:38px; font-weight:800; margin-bottom:6px;">Book Vehicle</h1>
-            <p style="color:#6b7280; margin-bottom:24px;">Select your rental dates. Booked dates are greyed out.</p>
+            <p style="color:#6b7280; margin-bottom:24px;">Select your rental dates. Booked and unavailable dates are greyed out.</p>
 
             @if(session('error'))
                 <div class="alert-error">{{ session('error') }}</div>
@@ -191,13 +191,17 @@ label {
     margin-bottom:20px;
 }
 
-/* Blocked Flatpickr dates */
+/* Disabled Flatpickr dates */
 .flatpickr-day.flatpickr-disabled,
-.flatpickr-day.flatpickr-disabled:hover {
-    background:#e5e7eb !important;
-    color:#9ca3af !important;
-    text-decoration:line-through;
-    cursor:not-allowed;
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.disabled,
+.flatpickr-day.disabled:hover {
+    background:#fee2e2 !important;
+    color:#991b1b !important;
+    border-color:#fecaca !important;
+    text-decoration:line-through !important;
+    cursor:not-allowed !important;
+    opacity:1 !important;
 }
 
 .flatpickr-day.selected,
@@ -221,107 +225,126 @@ label {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-const bookedRanges = @json($bookedDates ?? []);
+document.addEventListener('DOMContentLoaded', async function () {
+    const bookedRanges = @json($bookedDates ?? []);
 
-const disabledRanges = bookedRanges.map(range => ({
-    from: range.start_date,
-    to: range.end_date
-}));
+    const availabilityDates = await fetch(
+        "{{ route('vehicles.unavailable-dates', $vehicle->id) }}"
+    ).then(response => response.json());
 
-const rentalDays = document.getElementById('rentalDays');
-const totalPrice = document.getElementById('totalPrice');
-const depositAmount = document.getElementById('depositAmount');
+    const disabledRanges = [
+        ...bookedRanges.map(range => ({
+            from: range.start_date,
+            to: range.end_date
+        })),
+        ...availabilityDates
+    ];
 
-const dailyPrice = {{ $vehicle->price_per_day }};
+    const rentalDays = document.getElementById('rentalDays');
+    const totalPrice = document.getElementById('totalPrice');
+    const depositAmount = document.getElementById('depositAmount');
+    const startInput = document.getElementById('startDate');
+    const endInput = document.getElementById('endDate');
 
-let endPicker;
+    const dailyPrice = {{ $vehicle->price_per_day }};
 
-const startPicker = flatpickr("#startDate", {
-    dateFormat: "Y-m-d",
-    minDate: "today",
-    disable: disabledRanges,
-    defaultDate: "{{ old('start_date') }}",
-    onChange: function(selectedDates, dateStr) {
-        if (endPicker) {
-            endPicker.set("minDate", dateStr || "today");
-        }
+    let endPicker;
 
-        calculateBooking();
+    function resetTotals() {
+        rentalDays.innerText = '0';
+        totalPrice.innerText = 'Rs 0';
+        depositAmount.innerText = 'Rs 0';
     }
-});
 
-endPicker = flatpickr("#endDate", {
-    dateFormat: "Y-m-d",
-    minDate: "today",
-    disable: disabledRanges,
-    defaultDate: "{{ old('end_date') }}",
-    onChange: function() {
-        calculateBooking();
-    }
-});
+    function selectedRangeContainsBlockedDate(startDate, endDate) {
+        let current = new Date(startDate);
+        const end = new Date(endDate);
 
-function selectedRangeContainsBlockedDate(startDate, endDate) {
-    let current = new Date(startDate);
-    const end = new Date(endDate);
+        while (current <= end) {
+            const currentString = current.toISOString().split('T')[0];
 
-    while (current <= end) {
-        const currentString = current.toISOString().split('T')[0];
+            for (const range of bookedRanges) {
+                if (currentString >= range.start_date && currentString <= range.end_date) {
+                    return true;
+                }
+            }
 
-        for (const range of bookedRanges) {
-            if (currentString >= range.start_date && currentString <= range.end_date) {
+            if (availabilityDates.includes(currentString)) {
                 return true;
             }
+
+            current.setDate(current.getDate() + 1);
         }
 
-        current.setDate(current.getDate() + 1);
+        return false;
     }
 
-    return false;
-}
+    function calculateBooking() {
+        const startDateValue = startInput.value;
+        const endDateValue = endInput.value;
 
-function calculateBooking() {
-    const startDateValue = document.getElementById('startDate').value;
-    const endDateValue = document.getElementById('endDate').value;
+        if (!startDateValue || !endDateValue) {
+            resetTotals();
+            return;
+        }
 
-    if (!startDateValue || !endDateValue) {
-        rentalDays.innerText = '0';
-        totalPrice.innerText = 'Rs 0';
-        depositAmount.innerText = 'Rs 0';
-        return;
+        if (selectedRangeContainsBlockedDate(startDateValue, endDateValue)) {
+            alert('The selected range includes booked or unavailable dates. Please choose another period.');
+
+            endInput.value = '';
+
+            if (endPicker) {
+                endPicker.clear();
+            }
+
+            resetTotals();
+            return;
+        }
+
+        const start = new Date(startDateValue);
+        const end = new Date(endDateValue);
+
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+        if (days <= 0) {
+            resetTotals();
+            return;
+        }
+
+        const total = days * dailyPrice;
+        const deposit = total * 0.30;
+
+        rentalDays.innerText = days;
+        totalPrice.innerText = 'Rs ' + total.toLocaleString();
+        depositAmount.innerText = 'Rs ' + deposit.toLocaleString();
     }
 
-    if (selectedRangeContainsBlockedDate(startDateValue, endDateValue)) {
-        alert('The selected range includes blocked dates. Please choose another period.');
+    const startPicker = flatpickr("#startDate", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        disable: disabledRanges,
+        defaultDate: "{{ old('start_date') }}",
+        onChange: function(selectedDates, dateStr) {
+            if (endPicker) {
+                endPicker.set("minDate", dateStr || "today");
+            }
 
-        document.getElementById('endDate').value = '';
-        rentalDays.innerText = '0';
-        totalPrice.innerText = 'Rs 0';
-        depositAmount.innerText = 'Rs 0';
+            calculateBooking();
+        }
+    });
 
-        return;
-    }
+    endPicker = flatpickr("#endDate", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        disable: disabledRanges,
+        defaultDate: "{{ old('end_date') }}",
+        onChange: function() {
+            calculateBooking();
+        }
+    });
 
-    const start = new Date(startDateValue);
-    const end = new Date(endDateValue);
-
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-    if (days <= 0) {
-        rentalDays.innerText = '0';
-        totalPrice.innerText = 'Rs 0';
-        depositAmount.innerText = 'Rs 0';
-        return;
-    }
-
-    const total = days * dailyPrice;
-    const deposit = total * 0.30;
-
-    rentalDays.innerText = days;
-    totalPrice.innerText = 'Rs ' + total.toLocaleString();
-    depositAmount.innerText = 'Rs ' + deposit.toLocaleString();
-}
-
-calculateBooking();
+    calculateBooking();
+});
 </script>
 
 @endsection

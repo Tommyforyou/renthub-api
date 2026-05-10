@@ -41,7 +41,20 @@
         ">
             Edit
         </a>
-
+        <a
+            href="{{ route('company.vehicles.availability', $vehicle->id) }}"
+            style="
+                display:inline-block;
+                background:#111827;
+                color:white;
+                padding:8px 12px;
+                border-radius:6px;
+                text-decoration:none;
+                margin-left:8px;
+            "
+        >
+            Availability
+        </a>
         <form method="POST"
             action="{{ route('vehicles.destroy', $vehicle->id) }}"
             style="display:inline;"

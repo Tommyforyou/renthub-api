@@ -8,6 +8,10 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CompanyBookingController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\PricingController;
+use App\Http\Controllers\CompanyAvailabilityController;
+
+
 
 //use App\Http\Controllers\ReviewController;
 //use Illuminate\Foundation\Application;
@@ -19,13 +23,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+
+
 Route::get('/cars', [VehicleController::class, 'index'])->name('cars.index');
 
-Route::get('/cars/{vehicle}', [VehicleController::class, 'show'])
-    ->name('cars.show');
+Route::get('/cars/{vehicle}', [VehicleController::class, 'show'])->name('cars.show');
+Route::get('/companies/{company}', [RentalCompanyController::class, 'show'])->name('companies.show');
 
-Route::get('/companies/{company}', [RentalCompanyController::class, 'show'])
-    ->name('companies.show');
+Route::get('/vehicles/{vehicle}/unavailable-dates', [PricingController::class, 'unavailableDates'])->name('vehicles.unavailable-dates');
+Route::post('/vehicles/{vehicle}/calculate-price', [PricingController::class, 'calculate'])->name('vehicles.calculate-price');
 
 
 Route::get('/dashboard', function () {
@@ -99,6 +106,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:rental_company'])->group(function () {
 
     
+    Route::get('/company/vehicles/{vehicle}/availability',[CompanyAvailabilityController::class, 'index'])->name('company.vehicles.availability');
+    Route::post('/company/vehicles/{vehicle}/availability',[CompanyAvailabilityController::class, 'store'])->name('company.vehicles.availability.store');
+    Route::delete('/company/availability/{availability}',[CompanyAvailabilityController::class, 'destroy'])->name('company.vehicles.availability.destroy');
+
+
     Route::get('/company/dashboard', [CompanyBookingController::class, 'dashboard'])->name('company.dashboard');
     Route::get('/company/bookings', [CompanyBookingController::class, 'index'])->name('company.bookings');
     Route::get('/company/calendar', [CompanyBookingController::class, 'calendar'])->name('company.calendar');
@@ -108,6 +120,9 @@ Route::middleware(['auth', 'role:rental_company'])->group(function () {
     Route::get('/vehicles/create', [VehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
     Route::get('/vehicles/{vehicle}/edit', [VehicleController::class, 'edit'])->name('vehicles.edit');
+
+    Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
+
     Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
     Route::delete('/vehicles/images/{image}',[VehicleController::class, 'deleteImage'])->name('vehicles.images.delete');

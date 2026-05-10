@@ -107,7 +107,8 @@ class CompanyBookingController extends Controller
         $this->authorizeBooking($booking);
 
         $booking->update([
-            'status' => 'approved',
+            'status' => 'confirmed',
+            'confirmed_at' => now(),
         ]);
 
         return back()->with('success', 'Booking approved successfully.');

@@ -95,17 +95,27 @@ class BookingController extends Controller
             abort(403);
         }
 
-        if (!in_array($booking->status, ['pending', 'approved', 'confirmed'])) {
-            return back()->withErrors([
-                'booking' => 'This booking cannot be cancelled.',
-            ]);
+        if (in_array($booking->status, [
+            'completed',
+            'rejected',
+            'cancelled'
+        ])) {
+            return back()->with('error', 'This booking cannot be cancelled.');
+        }
+
+
+        // Customer Cannot Cancel Booking after pickup date
+
+        if (now()->toDateString() >= $booking->start_date->toDateString()) {
+            return back()->with('error', 'Bookings cannot be cancelled after pickup date.');
         }
 
         $booking->update([
             'status' => 'cancelled',
+            'cancelled_at' => now(),
         ]);
 
-        return back()->with('success', 'Booking cancelled successfully.');
+            return back()->with('success', 'Booking cancelled successfully.');
     }
 
     public function invoice(Booking $booking)

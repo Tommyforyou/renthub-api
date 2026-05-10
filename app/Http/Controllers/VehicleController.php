@@ -152,13 +152,42 @@ class VehicleController extends Controller {
         }
     }
 
-    public function show( Vehicle $vehicle ) {
-         $vehicle->load([
-        'reviews.customer',
-         'images'
-        ]);
+    public function show(Vehicle $vehicle)
+    {
+        $vehicle->load(['images', 'reviews.customer', 'company', 'availabilityBlocks']);
 
-        return view( 'vehicles.show', compact( 'vehicle' ) );
+        $unavailableDates = [];
+
+        foreach ($vehicle->availabilityBlocks as $block) {
+            $period = \Carbon\CarbonPeriod::create(
+                $block->blocked_from,
+                $block->blocked_until
+            );
+
+            foreach ($period as $date) {
+                $unavailableDates[] = $date->format('Y-m-d');
+            }
+        }
+
+        $bookings = \App\Models\Booking::where('vehicle_id', $vehicle->id)
+            ->whereIn('status', ['pending', 'confirmed', 'approved'])
+            ->get();
+
+        foreach ($bookings as $booking) {
+            $period = \Carbon\CarbonPeriod::create(
+                $booking->start_date,
+                $booking->end_date
+            );
+
+            foreach ($period as $date) {
+                $unavailableDates[] = $date->format('Y-m-d');
+            }
+        }
+
+        return view('vehicles.show', [
+            'vehicle' => $vehicle,
+            'unavailableDates' => array_values(array_unique($unavailableDates)),
+        ]);
     }
 
     public function store( Request $request ) {

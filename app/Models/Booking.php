@@ -24,6 +24,19 @@ class Booking extends Model
         'payment_status',
         'deposit_amount',
         'remaining_balance',
+        'status',
+        'cancelled_at',
+        'confirmed_at',
+        'rejected_at',
+        'cancellation_reason',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'confirmed_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function vehicle()
