@@ -7,23 +7,39 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CompanyBookingController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\FavoriteController;
+
+//use App\Http\Controllers\ReviewController;
+//use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+//use Inertia\Inertia;
+
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return view('welcome');
 });
 
 Route::get('/cars', [VehicleController::class, 'index'])->name('cars.index');
 
+Route::get('/cars/{vehicle}', [VehicleController::class, 'show'])
+    ->name('cars.show');
+
+Route::get('/companies/{company}', [RentalCompanyController::class, 'show'])
+    ->name('companies.show');
+
+
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $role = auth()->user()->role;
+
+    if ($role === 'admin') {
+        return redirect('/admin/dashboard');
+    }
+
+    if ($role === 'rental_company') {
+        return redirect('/company/dashboard');
+    }
+
+    return redirect('/cars');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
@@ -39,6 +55,38 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/cars/{vehicle}/book', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/cars/{vehicle}/book', [BookingController::class, 'store'])->name('bookings.store');
+
+    Route::get('/bookings/{booking}/invoice', [BookingController::class, 'invoice'])->name('bookings.invoice');
+    Route::get('/bookings/{booking}/invoice/download', [BookingController::class, 'downloadInvoice'])->name('bookings.invoice.download');
+
+    //Route::get('/bookings/{booking}/review', [ReviewController::class, 'create'])->name('reviews.create');
+    //Route::post('/bookings/{booking}/review', [ReviewController::class, 'store'])->name('reviews.store');
+
+    Route::get('/favorites',
+        [FavoriteController::class, 'index'])
+        ->name('favorites.index');
+
+    Route::post('/favorites/{vehicle}',
+        [FavoriteController::class, 'store'])
+        ->name('favorites.store');
+
+    Route::delete('/favorites/{vehicle}',
+        [FavoriteController::class, 'destroy'])
+        ->name('favorites.destroy');
+
+
+    Route::get('/notifications', function () {
+        return view('notifications.index', [
+            'notifications' => auth()->user()->notifications
+        ]);
+    })->name('notifications.index');
+
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->where('id', $id)->firstOrFail();
+        $notification->markAsRead();
+
+        return back()->with('success', 'Notification marked as read.');
+    })->name('notifications.read');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -49,27 +97,37 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:rental_company'])->group(function () {
+
+    
     Route::get('/company/dashboard', [CompanyBookingController::class, 'dashboard'])->name('company.dashboard');
     Route::get('/company/bookings', [CompanyBookingController::class, 'index'])->name('company.bookings');
-    Route::post('/company/bookings/{booking}/approve', [CompanyBookingController::class, 'approve'])->name('company.bookings.approve');
-    Route::post('/company/bookings/{booking}/reject', [CompanyBookingController::class, 'reject'])->name('company.bookings.reject');
+    Route::get('/company/calendar', [CompanyBookingController::class, 'calendar'])->name('company.calendar');
+    Route::get('/company/vehicles', [VehicleController::class, 'myVehicles'])->name('company.vehicles');
 
+    
     Route::get('/vehicles/create', [VehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
-
     Route::get('/vehicles/{vehicle}/edit', [VehicleController::class, 'edit'])->name('vehicles.edit');
-
     Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+    Route::delete('/vehicles/images/{image}',[VehicleController::class, 'deleteImage'])->name('vehicles.images.delete');
+    Route::post('/vehicles/images/{image}/primary',[VehicleController::class, 'setPrimaryImage'])->name('vehicles.images.primary');
 
-    Route::post('/company/bookings/{booking}/complete',
-    [CompanyBookingController::class, 'complete'])
-    ->name('company.bookings.complete');
+
+    Route::post('/company/bookings/{booking}/approve',[CompanyBookingController::class, 'approve'])->name('company.bookings.approve');
+    Route::post('/company/bookings/{booking}/reject',[CompanyBookingController::class, 'reject'])->name('company.bookings.reject');
+    Route::post('/company/bookings/{booking}/complete', [CompanyBookingController::class, 'complete'])->name('company.bookings.complete');
+    Route::post('/company/bookings/{booking}/mark-paid',[CompanyBookingController::class, 'markPaid'])->name('company.bookings.markPaid');
+
 });
 
-Route::get('/company/vehicles', [VehicleController::class, 'myVehicles'])
-    ->name('company.vehicles');
+Route::get('/force-logout', function () {
+    auth()->logout();
 
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
 
+    return redirect('/login');
+});
 
 require __DIR__.'/auth.php';

@@ -3,122 +3,158 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\RentalCompany;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\BookingStatusMail;
+use App\Models\Vehicle;
 
 class CompanyBookingController extends Controller
 {
-    public function index()
+    private function company()
     {
-        $company = RentalCompany::where('user_id', auth()->id())
-            ->where('status', 'approved')
-            ->firstOrFail();
+        $company = auth()->user()->rentalCompany;
 
-        $bookings = Booking::with(['vehicle', 'customer'])
+        if (!$company) {
+            abort(403);
+        }
+
+        return $company;
+    }
+
+    public function dashboard()
+    {
+        $company = $this->company();
+
+        $bookings = Booking::with(['vehicle.images', 'customer'])
             ->whereHas('vehicle', function ($query) use ($company) {
                 $query->where('rental_company_id', $company->id);
             })
             ->latest()
             ->get();
 
-        return view('company.bookings.index', compact('bookings'));
+        $vehicles = Vehicle::with('images')
+            ->where('rental_company_id', $company->id)
+            ->latest()
+            ->get();
+
+        $stats = [
+            'total_vehicles' => $vehicles->count(),
+            'available_vehicles' => $vehicles->where('available', true)->count(),
+            'total_bookings' => $bookings->count(),
+            'pending_bookings' => $bookings->where('status', 'pending')->count(),
+            'approved_bookings' => $bookings->whereIn('status', ['approved', 'confirmed'])->count(),
+            'completed_bookings' => $bookings->where('status', 'completed')->count(),
+            'total_revenue' => $bookings
+                ->whereIn('status', ['approved', 'confirmed', 'completed'])
+                ->sum('owner_payout_amount'),
+        ];
+
+        return view('company.dashboard', compact('company', 'vehicles', 'bookings', 'stats'));
+    }
+
+    public function index()
+    {
+        $company = $this->company();
+
+        $bookings = Booking::with(['vehicle.images', 'customer'])
+            ->whereHas('vehicle', function ($query) use ($company) {
+                $query->where('rental_company_id', $company->id);
+            })
+            ->latest()
+            ->get();
+
+        $stats = [
+            'total_bookings' => $bookings->count(),
+            'pending_bookings' => $bookings->where('status', 'pending')->count(),
+            'approved_bookings' => $bookings->whereIn('status', ['approved', 'confirmed'])->count(),
+            'rejected_bookings' => $bookings->where('status', 'rejected')->count(),
+            'total_revenue' => $bookings
+                ->whereIn('status', ['approved', 'confirmed', 'completed'])
+                ->sum('owner_payout_amount'),
+            'pending_revenue' => $bookings
+                ->where('payment_status', 'pending')
+                ->sum('remaining_balance'),
+        ];
+
+        return view('company.bookings', compact('bookings', 'stats'));
+    }
+
+    public function calendar()
+    {
+        $company = $this->company();
+
+        $bookings = Booking::with(['vehicle', 'customer'])
+            ->whereHas('vehicle', function ($query) use ($company) {
+                $query->where('rental_company_id', $company->id);
+            })
+            ->whereIn('status', ['pending', 'approved', 'confirmed', 'completed'])
+            ->orderBy('start_date')
+            ->get();
+
+        $events = $bookings->map(function ($booking) {
+            return [
+                'title' => $booking->vehicle->brand . ' ' . $booking->vehicle->model . ' - ' . $booking->customer->name,
+                'start' => $booking->start_date,
+                'end' => \Carbon\Carbon::parse($booking->end_date)->addDay()->format('Y-m-d'),
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'amount' => $booking->total_amount,
+            ];
+        });
+
+        return view('company.calendar', compact('bookings', 'events'));
     }
 
     public function approve(Booking $booking)
     {
-        $this->authorizeCompanyBooking($booking);
+        $this->authorizeBooking($booking);
 
-        $booking->status = 'confirmed';
-        $booking->save();
+        $booking->update([
+            'status' => 'approved',
+        ]);
 
-        Mail::to($booking->customer->email)
-            ->send(new BookingStatusMail($booking, 'Your booking has been approved.'));
-        
-        return back()->with('success', 'Booking approved.');
+        return back()->with('success', 'Booking approved successfully.');
     }
 
     public function reject(Booking $booking)
     {
-        $this->authorizeCompanyBooking($booking);
+        $this->authorizeBooking($booking);
 
-        $booking->status = 'cancelled';
-        $booking->save();
+        $booking->update([
+            'status' => 'rejected',
+        ]);
 
-        Mail::to($booking->customer->email)
-        ->send(new BookingStatusMail($booking, 'Your booking has been rejected.'));
-        
-        return back()->with('success', 'Booking rejected.');
+        return back()->with('success', 'Booking rejected successfully.');
     }
 
     public function complete(Booking $booking)
     {
-        $this->authorizeCompanyBooking($booking);
+        $this->authorizeBooking($booking);
 
-        if ($booking->status !== 'confirmed') {
-            return back()->withErrors([
-                'booking' => 'Only confirmed bookings can be completed.'
-            ]);
-        }
-
-        $booking->status = 'completed';
-        $booking->save();
-
-        Mail::to($booking->customer->email)
-        ->send(new BookingStatusMail($booking, 'Your rental has been marked as completed.'));
+        $booking->update([
+            'status' => 'completed',
+        ]);
 
         return back()->with('success', 'Booking marked as completed.');
     }
 
-
-    private function authorizeCompanyBooking(Booking $booking): void
+    public function markPaid(Booking $booking)
     {
-        $company = RentalCompany::where('user_id', auth()->id())
-            ->where('status', 'approved')
-            ->firstOrFail();
+        $this->authorizeBooking($booking);
+
+        $booking->update([
+            'payment_status' => 'paid',
+            'remaining_balance' => 0,
+        ]);
+
+        return back()->with('success', 'Payment marked as paid.');
+    }
+
+    protected function authorizeBooking(Booking $booking)
+    {
+        $company = $this->company();
+
+        $booking->loadMissing('vehicle');
 
         if ($booking->vehicle->rental_company_id !== $company->id) {
             abort(403);
         }
     }
-
-    public function dashboard()
-    {
-        $company = RentalCompany::where('user_id', auth()->id())
-            ->where('status', 'approved')
-            ->firstOrFail();
-
-        $vehicleIds = $company->vehicles()->pluck('id');
-
-        $bookings = Booking::whereIn('vehicle_id', $vehicleIds);
-
-        $totalRevenue = (clone $bookings)
-            ->where('status', 'confirmed')
-            ->sum('owner_payout_amount');
-
-        $totalCommission = (clone $bookings)
-            ->where('status', 'confirmed')
-            ->sum('commission_amount');
-
-        $pendingBookings = (clone $bookings)
-            ->where('status', 'pending')
-            ->count();
-
-        $confirmedBookings = (clone $bookings)
-            ->where('status', 'confirmed')
-            ->count();
-
-        $vehicleCount = $company->vehicles()->count();
-
-        return view('company.dashboard', compact(
-            'totalRevenue',
-            'totalCommission',
-            'pendingBookings',
-            'confirmedBookings',
-            'vehicleCount'
-        ));
-} 
-
-
-
 }

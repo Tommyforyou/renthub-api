@@ -4,39 +4,68 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\RentalCompany;
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Models\RentalCompany;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $totalBookings = Booking::count();
-
-        $confirmedBookings = Booking::where('status', 'confirmed')
-            ->count();
-
-        $totalCommission = Booking::where('status', 'confirmed')
-            ->sum('commission_amount');
-
-        $totalRevenue = Booking::where('status', 'confirmed')
-            ->sum('total_amount');
-
-        $totalCustomers = User::count();
-
-        $totalVehicles = Vehicle::count();
+        $totalUsers = User::count();
 
         $totalCompanies = RentalCompany::count();
 
+        $pendingCompanies = RentalCompany::where('status', 'pending')->count();
+
+        $approvedCompanies = RentalCompany::where('status', 'approved')->count();
+
+        $totalVehicles = Vehicle::count();
+
+        $availableVehicles = Vehicle::where('available', true)->count();
+
+        $totalBookings = Booking::count();
+
+        $pendingBookings = Booking::where('status', 'pending')->count();
+
+        $approvedBookings = Booking::whereIn('status', [
+            'approved',
+            'confirmed'
+        ])->count();
+
+        $completedBookings = Booking::where('status', 'completed')->count();
+
+        $totalRevenue = Booking::sum('total_amount');
+
+        $totalCommission = Booking::sum('commission_amount');
+
+        $recentBookings = Booking::with([
+                'vehicle',
+                'customer'
+            ])
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $recentCompanies = RentalCompany::latest()
+            ->take(6)
+            ->get();
+
         return view('admin.dashboard', compact(
-            'totalBookings',
-            'confirmedBookings',
-            'totalCommission',
-            'totalRevenue',
-            'totalCustomers',
+            'totalUsers',
+            'totalCompanies',
+            'pendingCompanies',
+            'approvedCompanies',
             'totalVehicles',
-            'totalCompanies'
+            'availableVehicles',
+            'totalBookings',
+            'pendingBookings',
+            'approvedBookings',
+            'completedBookings',
+            'totalRevenue',
+            'totalCommission',
+            'recentBookings',
+            'recentCompanies'
         ));
     }
 }

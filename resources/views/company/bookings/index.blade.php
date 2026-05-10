@@ -7,7 +7,7 @@
         body{
             font-family:Arial;
             background:#f5f5f5;
-            padding:40px;
+            /*padding:40px;*/
         }
 
         table{

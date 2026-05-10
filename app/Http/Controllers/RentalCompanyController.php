@@ -31,4 +31,12 @@ class RentalCompanyController extends Controller
         return redirect('/dashboard')
             ->with('success', 'Company registration submitted.');
     }
+
+    public function show(\App\Models\RentalCompany $company)
+    {
+        $company->load('vehicles.reviews.customer');
+
+        return view('companies.show', compact('company'));
+    }
+
 }
