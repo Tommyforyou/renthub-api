@@ -31,4 +31,18 @@ class RentalCompany extends Model
     {
         return $this->hasMany(Vehicle::class);
     }
+    /*
+    |--------------------------------------------------------------------------
+    | Payments Relationship
+    |--------------------------------------------------------------------------
+    |
+    | Payments linked to this rental company.
+    |
+    */
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
 }

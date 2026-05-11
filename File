@@ -1,0 +1,533 @@
+@extends('layouts.app')
+
+@section('content')
+
+<style>
+    /*
+    |--------------------------------------------------------------------------
+    | Payments Page
+    |--------------------------------------------------------------------------
+    */
+
+    .payments-wrapper {
+        background: rgba(255,255,255,0.96);
+        border-radius: 30px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 24px 60px rgba(15,23,42,0.08);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hero Section
+    |--------------------------------------------------------------------------
+    */
+
+    .payments-hero {
+        padding: 36px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .payments-hero-left {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .payments-icon {
+        width: 88px;
+        height: 88px;
+        border-radius: 28px;
+        background: linear-gradient(135deg,#dcfce7,#bbf7d0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        color: #16a34a;
+    }
+
+    .payments-title {
+        margin: 0 0 10px;
+        font-size: 40px;
+        font-weight: 900;
+        color: #0f172a;
+        letter-spacing: -1px;
+    }
+
+    .payments-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 16px;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Statistics
+    |--------------------------------------------------------------------------
+    */
+
+    .payments-stats {
+        padding: 30px 36px 10px;
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 18px 34px rgba(15,23,42,0.05);
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .stat-value {
+        font-size: 34px;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Table
+    |--------------------------------------------------------------------------
+    */
+
+    .payments-content {
+        padding: 36px;
+    }
+
+    .payments-table-wrap {
+        overflow-x: auto;
+        border-radius: 24px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .payments-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    .payments-table thead {
+        background: #f8fafc;
+    }
+
+    .payments-table th {
+        text-align: left;
+        padding: 20px;
+        color: #475569;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-weight: 900;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .payments-table td {
+        padding: 22px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .payments-table tr:hover {
+        background: #fafafa;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booking Cell
+    |--------------------------------------------------------------------------
+    */
+
+    .booking-title {
+        font-size: 16px;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+
+    .booking-subtitle {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Status Badge
+    |--------------------------------------------------------------------------
+    */
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .status-paid {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .status-pending {
+        background: #fef9c3;
+        color: #a16207;
+    }
+
+    .status-failed {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Amount
+    |--------------------------------------------------------------------------
+    */
+
+    .amount {
+        font-size: 18px;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Empty State
+    |--------------------------------------------------------------------------
+    */
+
+    .payments-empty {
+        padding: 80px 20px;
+        text-align: center;
+    }
+
+    .payments-empty-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 54px;
+    }
+
+    .payments-empty-title {
+        font-size: 34px;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    .payments-empty-text {
+        color: #64748b;
+        font-size: 16px;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Responsive
+    |--------------------------------------------------------------------------
+    */
+
+    @media(max-width: 1000px) {
+
+        .payments-stats {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @media(max-width: 700px) {
+
+        .payments-hero,
+        .payments-content {
+            padding: 22px;
+        }
+
+        .payments-stats {
+            grid-template-columns: 1fr;
+            padding: 22px;
+        }
+
+        .payments-title {
+            font-size: 34px;
+        }
+    }
+</style>
+
+{{--
+|--------------------------------------------------------------------------
+| Statistics Calculation
+|--------------------------------------------------------------------------
+--}}
+
+@php
+
+    $totalPayments = $payments->count();
+
+    $paidPayments = $payments->where('status', 'paid')->count();
+
+    $pendingPayments = $payments->where('status', 'pending')->count();
+
+    $totalRevenue = $payments
+        ->where('status', 'paid')
+        ->sum('amount');
+
+@endphp
+
+<div class="payments-wrapper">
+
+    {{--
+    |--------------------------------------------------------------------------
+    | Hero Header
+    |--------------------------------------------------------------------------
+    --}}
+
+    <div class="payments-hero">
+
+        <div class="payments-hero-left">
+
+            <div class="payments-icon">
+                💳
+            </div>
+
+            <div>
+
+                <h1 class="payments-title">
+                    Payments
+                </h1>
+
+                <p class="payments-subtitle">
+                    Track your booking payments, invoices and transactions.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {{--
+    |--------------------------------------------------------------------------
+    | Statistics Cards
+    |--------------------------------------------------------------------------
+    --}}
+
+    <div class="payments-stats">
+
+        <div class="stat-card">
+            <div class="stat-label">
+                Total Payments
+            </div>
+
+            <div class="stat-value">
+                {{ $totalPayments }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">
+                Paid Transactions
+            </div>
+
+            <div class="stat-value">
+                {{ $paidPayments }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">
+                Pending Payments
+            </div>
+
+            <div class="stat-value">
+                {{ $pendingPayments }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">
+                Total Revenue
+            </div>
+
+            <div class="stat-value">
+                Rs {{ number_format($totalRevenue, 2) }}
+            </div>
+        </div>
+
+    </div>
+
+    {{--
+    |--------------------------------------------------------------------------
+    | Payments Content
+    |--------------------------------------------------------------------------
+    --}}
+
+    <div class="payments-content">
+
+        @forelse($payments as $payment)
+
+            @php
+
+                /*
+                |--------------------------------------------------------------------------
+                | Safe Relationships
+                |--------------------------------------------------------------------------
+                */
+
+                $booking = $payment->booking;
+
+                $vehicle = $booking?->vehicle;
+
+                $company = $payment->rentalCompany;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Status Styling
+                |--------------------------------------------------------------------------
+                */
+
+                $statusClass = match($payment->status) {
+
+                    'paid' => 'status-paid',
+
+                    'failed' => 'status-failed',
+
+                    default => 'status-pending',
+                };
+
+            @endphp
+
+            <div class="payments-table-wrap mb-4">
+
+                <table class="payments-table">
+
+                    <tbody>
+
+                        <tr>
+
+                            <td width="35%">
+
+                                <div class="booking-title">
+                                    {{ $vehicle?->brand }}
+                                    {{ $vehicle?->model }}
+                                </div>
+
+                                <div class="booking-subtitle">
+                                    Booking #{{ $booking?->id }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <div class="booking-subtitle">
+                                    Rental Company
+                                </div>
+
+                                <div class="booking-title">
+                                    {{ $company?->company_name ?? 'N/A' }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <div class="booking-subtitle">
+                                    Payment Method
+                                </div>
+
+                                <div class="booking-title">
+                                    {{ ucfirst($payment->payment_method ?? 'manual') }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <span class="status-badge {{ $statusClass }}">
+
+                                    @if($payment->status === 'paid')
+                                        ✓
+                                    @elseif($payment->status === 'failed')
+                                        ✕
+                                    @else
+                                        ⏳
+                                    @endif
+
+                                    {{ ucfirst($payment->status) }}
+
+                                </span>
+
+                            </td>
+
+                            <td align="right">
+
+                                <div class="amount">
+                                    Rs {{ number_format($payment->amount, 2) }}
+                                </div>
+
+                                <div class="booking-subtitle">
+                                    {{ $payment->created_at?->diffForHumans() }}
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        @empty
+
+            {{--
+            |--------------------------------------------------------------------------
+            | Empty State
+            |--------------------------------------------------------------------------
+            --}}
+
+            <div class="payments-empty">
+
+                <div class="payments-empty-icon">
+                    💳
+                </div>
+
+                <div class="payments-empty-title">
+                    No payments yet
+                </div>
+
+                <div class="payments-empty-text">
+                    Your booking payments and invoices will appear here.
+                </div>
+
+            </div>
+
+        @endforelse
+
+    </div>
+
+</div>
+
+@endsection

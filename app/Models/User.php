@@ -64,4 +64,17 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+    /*
+    |--------------------------------------------------------------------------
+    | Payments Relationship
+    |--------------------------------------------------------------------------
+    |
+    | Customer payments made through the platform.
+    |
+    */
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

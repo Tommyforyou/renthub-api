@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Vehicle;
+use App\Notifications\BookingConfirmedNotification;
+use App\Notifications\BookingStatusNotification;
 
 class CompanyBookingController extends Controller
 {
@@ -65,6 +67,7 @@ class CompanyBookingController extends Controller
             'pending_bookings' => $bookings->where('status', 'pending')->count(),
             'approved_bookings' => $bookings->whereIn('status', ['approved', 'confirmed'])->count(),
             'rejected_bookings' => $bookings->where('status', 'rejected')->count(),
+            'completed_bookings' => $bookings->where('status', 'completed')->count(),
             'total_revenue' => $bookings
                 ->whereIn('status', ['approved', 'confirmed', 'completed'])
                 ->sum('owner_payout_amount'),
@@ -111,6 +114,20 @@ class CompanyBookingController extends Controller
             'confirmed_at' => now(),
         ]);
 
+        if ($booking->customer) {
+            $booking->customer->notify(
+                new BookingStatusNotification(
+                    $booking,
+                    'Booking Confirmed',
+                    'Your booking has been confirmed by the rental company.'
+                )
+            );
+
+            $booking->customer->notify(
+                new BookingConfirmedNotification($booking)
+            );
+        }
+
         return back()->with('success', 'Booking approved successfully.');
     }
 
@@ -120,7 +137,18 @@ class CompanyBookingController extends Controller
 
         $booking->update([
             'status' => 'rejected',
+            'rejected_at' => now(),
         ]);
+
+        if ($booking->customer) {
+            $booking->customer->notify(
+                new BookingStatusNotification(
+                    $booking,
+                    'Booking Rejected',
+                    'Unfortunately your booking was rejected.'
+                )
+            );
+        }
 
         return back()->with('success', 'Booking rejected successfully.');
     }
@@ -131,7 +159,18 @@ class CompanyBookingController extends Controller
 
         $booking->update([
             'status' => 'completed',
+            'completed_at' => now(),
         ]);
+
+        if ($booking->customer) {
+            $booking->customer->notify(
+                new BookingStatusNotification(
+                    $booking,
+                    'Rental Completed',
+                    'Your rental booking has been completed.'
+                )
+            );
+        }
 
         return back()->with('success', 'Booking marked as completed.');
     }
@@ -143,7 +182,18 @@ class CompanyBookingController extends Controller
         $booking->update([
             'payment_status' => 'paid',
             'remaining_balance' => 0,
+            'paid_at' => now(),
         ]);
+
+        if ($booking->customer) {
+            $booking->customer->notify(
+                new BookingStatusNotification(
+                    $booking,
+                    'Payment Received',
+                    'Your payment has been marked as received.'
+                )
+            );
+        }
 
         return back()->with('success', 'Payment marked as paid.');
     }
@@ -154,7 +204,7 @@ class CompanyBookingController extends Controller
 
         $booking->loadMissing('vehicle');
 
-        if ($booking->vehicle->rental_company_id !== $company->id) {
+        if (!$booking->vehicle || $booking->vehicle->rental_company_id !== $company->id) {
             abort(403);
         }
     }

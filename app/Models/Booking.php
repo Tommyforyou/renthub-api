@@ -48,4 +48,17 @@ class Booking extends Model
     {
         return $this->belongsTo(User::class, 'customer_id');
     }
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Relationship
+    |--------------------------------------------------------------------------
+    |
+    | A booking can have one payment record.
+    |
+    */
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }
